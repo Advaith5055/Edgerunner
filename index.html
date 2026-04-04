@@ -1,710 +1,172 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>EDGE_RUNNER Minimal Chatbot</title>
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
-    <style>
-        :root {
-            /* Dark Theme Variables */
-            --bg-color: #0f0f10;
-            --surface-color: #1a1a1c;
-            --text-primary: #f0f0f0;
-            --text-secondary: #a0a0a5;
-            --user-msg-bg: #2a2b2f;
-            --accent-color: #e3e3e3;
-            --border-color: #2a2b2f;
-            --hover-color: #232427;
-            --input-bg: #1a1a1c;
-            --dropdown-bg: #232427;
-        }
-
-        * {
-            margin: 0;
-            padding: 0;
-            box-sizing: border-box;
-            font-family: 'Inter', sans-serif;
-        }
-
-        body {
-            background-color: var(--bg-color);
-            color: var(--text-primary);
-            display: flex;
-            height: 100vh;
-            overflow: hidden;
-        }
-
-        /* Sidebar Styles */
-        .sidebar {
-            width: 280px;
-            background-color: var(--bg-color);
-            border-right: 1px solid var(--border-color);
-            padding: 25px 15px;
-            display: flex;
-            flex-direction: column;
-            transition: all 0.3s ease;
-            overflow: hidden;
-            white-space: nowrap; 
-        }
-
-        .sidebar.hidden {
-            width: 0;
-            padding-left: 0;
-            padding-right: 0;
-            border-right: none;
-            opacity: 0;
-        }
-
-        /* Watermark Styles */
-        .watermark {
-            font-family: 'Klavika Bold', 'Klavika', sans-serif; 
-            font-size: 20px; 
-            font-weight: 700; 
-            letter-spacing: 2px;
-            color: var(--text-secondary);
-            opacity: 0.6;
-            padding-left: 5px;
-            margin-bottom: 40px; 
-            user-select: none;
-        }
-
-        .new-chat-btn {
-            display: flex;
-            align-items: center;
-            gap: 10px;
-            background-color: transparent;
-            color: var(--text-primary);
-            border: 1px solid var(--border-color);
-            padding: 12px 16px;
-            border-radius: 12px;
-            font-size: 14px;
-            font-weight: 500;
-            cursor: pointer;
-            transition: background-color 0.2s;
-            width: 100%;
-            margin-bottom: 30px;
-        }
-
-        .new-chat-btn svg {
-            fill: var(--text-primary);
-            min-width: 18px; 
-        }
-
-        .new-chat-btn:hover {
-            background-color: var(--hover-color);
-        }
-
-        /* Sidebar Tools Navigation */
-        .nav-section-title {
-            font-size: 11px;
-            font-weight: 600;
-            color: var(--text-secondary);
-            letter-spacing: 1px;
-            padding-left: 10px;
-            margin-bottom: 10px;
-            opacity: 0.7;
-        }
-
-        .tool-nav-btn {
-            display: flex;
-            align-items: center;
-            gap: 12px;
-            width: 100%;
-            background: transparent;
-            border: none;
-            color: var(--text-secondary);
-            padding: 10px 10px;
-            border-radius: 8px;
-            font-size: 14px;
-            font-weight: 400;
-            cursor: pointer;
-            transition: all 0.2s ease;
-            text-align: left;
-        }
-
-        .tool-nav-btn svg {
-            fill: currentColor;
-            min-width: 18px;
-        }
-
-        .tool-nav-btn:hover {
-            background-color: var(--hover-color);
-            color: var(--text-primary);
-        }
-
-        /* Main Content Styles */
-        .main-content {
-            flex-grow: 1;
-            display: flex;
-            flex-direction: column;
-            position: relative;
-            background-color: var(--bg-color);
-            min-width: 0; 
-        }
-
-        .header {
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            padding: 15px 30px;
-            border-bottom: 1px solid transparent;
-        }
-
-        .menu-btn {
-            background: none;
-            border: 1px solid transparent;
-            cursor: pointer;
-            padding: 10px;
-            border-radius: 8px;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            width: 44px;
-            height: 44px;
-            color: var(--text-secondary);
-            transition: background-color 0.2s, border 0.2s;
-        }
-
-        .menu-btn:hover {
-            background-color: var(--hover-color);
-            border: 1px solid var(--border-color);
-            color: var(--text-primary);
-        }
-
-        .menu-btn svg {
-            fill: currentColor;
-        }
-
-        .user-avatar {
-            width: 36px;
-            height: 36px;
-            background-color: #2a2b2f; 
-            border: 1px solid #404248;
-            color: var(--text-primary);
-            border-radius: 10px;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            font-weight: 600;
-            font-size: 16px;
-        }
-
-        .chat-container {
-            flex-grow: 1;
-            padding: 20px 15%;
-            overflow-y: auto;
-            display: flex;
-            flex-direction: column;
-            gap: 30px;
-            scroll-behavior: smooth;
-        }
-
-        /* Greeting */
-        .greeting {
-            margin-top: 60px;
-            margin-bottom: 40px;
-            display: flex;
-            flex-direction: column;
-            align-items: flex-start;
-        }
-        
-        .greeting h1 {
-            font-size: 42px;
-            font-weight: 500;
-            letter-spacing: -1px;
-            color: #ffffff; 
-            opacity: 0.9;
-        }
-
-        /* Messages */
-        .message {
-            display: flex;
-            gap: 20px;
-            max-width: 100%;
-            line-height: 1.6;
-        }
-
-        .message.user-message {
-            flex-direction: row-reverse;
-        }
-
-        .message.user-message .message-content {
-            background-color: var(--user-msg-bg);
-            padding: 14px 20px;
-            border-radius: 12px;
-            max-width: 70%;
-            color: var(--text-primary);
-            border: 1px solid var(--border-color);
-        }
-
-        .message.ai-message .message-content {
-            max-width: 80%;
-            padding-top: 5px;
-            color: var(--text-primary);
-        }
-
-        .ai-avatar {
-            min-width: 36px;
-            height: 36px;
-            border-radius: 10px;
-            background-color: var(--surface-color);
-            border: 1px solid var(--border-color);
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            color: var(--text-primary);
-        }
-
-        .ai-avatar svg {
-            width: 20px;
-            height: 20px;
-        }
-
-        /* Input Area */
-        .input-container {
-            padding: 20px 15%;
-            background-color: var(--bg-color);
-        }
-
-        .input-box {
-            display: flex;
-            align-items: center;
-            background-color: var(--input-bg);
-            padding: 12px 20px;
-            border-radius: 12px;
-            border: 1px solid var(--border-color);
-            gap: 10px;
-            box-shadow: 0 4px 20px rgba(0,0,0,0.2);
-            transition: border-color 0.2s;
-            position: relative; /* For dropdown positioning */
-        }
-
-        .input-box:focus-within {
-            border-color: #555860;
-        }
-
-        /* Context Menu (+) Button & Dropdown */
-        .action-menu-wrapper {
-            position: relative;
-            display: flex;
-            align-items: center;
-        }
-
-        .plus-btn {
-            background: none;
-            border: none;
-            cursor: pointer;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            padding: 6px;
-            border-radius: 50%;
-            background-color: var(--user-msg-bg);
-            color: var(--text-secondary);
-            transition: all 0.2s;
-        }
-
-        .plus-btn:hover {
-            background-color: #404248;
-            color: var(--text-primary);
-            transform: rotate(90deg);
-        }
-
-        .plus-btn svg {
-            width: 20px;
-            height: 20px;
-            fill: currentColor;
-        }
-
-        .action-dropdown {
-            position: absolute;
-            bottom: 140%;
-            left: 0;
-            background-color: var(--dropdown-bg);
-            border: 1px solid var(--border-color);
-            border-radius: 10px;
-            padding: 6px;
-            box-shadow: 0 4px 15px rgba(0,0,0,0.4);
-            display: none; /* Hidden by default */
-            flex-direction: column;
-            min-width: 160px;
-            z-index: 10;
-        }
-
-        .action-dropdown.active {
-            display: flex;
-            animation: fadeIn 0.2s ease;
-        }
-
-        @keyframes fadeIn {
-            from { opacity: 0; transform: translateY(10px); }
-            to { opacity: 1; transform: translateY(0); }
-        }
-
-        .dropdown-item {
-            background: none;
-            border: none;
-            color: var(--text-primary);
-            padding: 10px 12px;
-            border-radius: 6px;
-            display: flex;
-            align-items: center;
-            gap: 10px;
-            cursor: pointer;
-            font-size: 13px;
-            font-weight: 500;
-            transition: background-color 0.2s;
-            text-align: left;
-            width: 100%;
-        }
-
-        .dropdown-item:hover {
-            background-color: #383a40;
-        }
-
-        .dropdown-item svg {
-            fill: var(--text-secondary);
-            width: 16px;
-            height: 16px;
-        }
-
-        /* Input Field */
-        .input-box input {
-            flex-grow: 1;
-            border: none;
-            background: transparent;
-            font-size: 15px;
-            color: var(--text-primary);
-            padding: 10px 5px;
-            outline: none;
-        }
-
-        .input-box input::placeholder {
-            color: #6a6c72;
-        }
-
-        .icon-btn {
-            background: none;
-            border: none;
-            cursor: pointer;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            padding: 8px;
-            border-radius: 8px;
-            color: var(--text-secondary);
-            transition: background-color 0.2s, color 0.2s;
-        }
-
-        .icon-btn:hover {
-            background-color: var(--hover-color);
-            color: var(--text-primary);
-        }
-
-        .icon-btn svg {
-            width: 20px;
-            height: 20px;
-            fill: currentColor;
-        }
-
-        .send-btn {
-            color: var(--text-primary);
-            display: none; 
-            background-color: var(--user-msg-bg);
-            border: 1px solid var(--border-color);
-        }
-
-        .send-btn:hover {
-            background-color: #404248;
-        }
-
-        /* Typing Indicator */
-        .typing-indicator {
-            display: flex;
-            gap: 5px;
-            padding: 10px 0;
-        }
-        .typing-indicator span {
-            width: 6px;
-            height: 6px;
-            background-color: var(--text-secondary);
-            border-radius: 50%;
-            animation: pulse 1.4s infinite ease-in-out both;
-        }
-        .typing-indicator span:nth-child(1) { animation-delay: -0.32s; }
-        .typing-indicator span:nth-child(2) { animation-delay: -0.16s; }
-        
-        @keyframes pulse {
-            0%, 80%, 100% { opacity: 0.3; transform: scale(0.8); }
-            40% { opacity: 1; transform: scale(1.2); }
-        }
-
-        /* Custom Scrollbar */
-        ::-webkit-scrollbar {
-            width: 6px;
-        }
-        ::-webkit-scrollbar-track {
-            background: transparent; 
-        }
-        ::-webkit-scrollbar-thumb {
-            background: #33353a; 
-            border-radius: 10px;
-        }
-        ::-webkit-scrollbar-thumb:hover {
-            background: #4a4c52; 
-        }
-
-        @media (max-width: 768px) {
-            .sidebar {
-                position: absolute;
-                height: 100%;
-                z-index: 100;
-                box-shadow: 4px 0 20px rgba(0,0,0,0.5);
-            }
-            .sidebar.hidden {
-                width: 0;
-                border: none;
-                box-shadow: none;
-            }
-            .chat-container, .input-container {
-                padding-left: 20px;
-                padding-right: 20px;
-            }
-            .greeting h1 {
-                font-size: 32px;
-            }
-        }
-    </style>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>EDGERUNNER | Agentic AI Device</title>
+<link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;700;900&family=Inter:wght@300;400;600&family=JetBrains+Mono:wght@300;400&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="styles.css">
 </head>
 <body>
 
-    <div class="sidebar" id="sidebar">
-        <div class="watermark">EDGE_RUNNER</div>
+<div class="cursor" id="cursor"></div>
+<div class="cursor-ring" id="cursor-ring"></div>
 
-        <button class="new-chat-btn">
-            <svg xmlns="http://www.w3.org/2000/svg" height="18" viewBox="0 -960 960 960" width="18"><path d="M440-440H200v-80h240v-240h80v240h240v80H520v240h-80v-240Z"/></svg>
-            New Session
-        </button>
+<canvas id="bg-canvas"></canvas>
 
-        <div class="nav-section-title">WORKSPACE</div>
-        
-        <button class="tool-nav-btn">
-            <svg xmlns="http://www.w3.org/2000/svg" height="18" viewBox="0 -960 960 960" width="18"><path d="M240-160q-33 0-56.5-23.5T160-240v-640q0-33 23.5-56.5T240-960h480q33 0 56.5 23.5T800-880v640q0 33-23.5 56.5T720-160H240Zm0-80h480v-640H240v640Zm240-120q33 0 56.5-23.5T560-440q0-33-23.5-56.5T480-520q-33 0-56.5 23.5T400-440q0 33 23.5 56.5T480-360ZM240-880v640-640Z"/></svg>
-            Compressor
-        </button>
-        
-        <button class="tool-nav-btn">
-            <svg xmlns="http://www.w3.org/2000/svg" height="18" viewBox="0 -960 960 960" width="18"><path d="M320-240 80-480l240-240 57 57-184 184 183 183-56 56Zm320 0-57-57 184-184-183-183 56-56 240 240-240 240Z"/></svg>
-            Simulator
-        </button>
-        
-        <button class="tool-nav-btn">
-            <svg xmlns="http://www.w3.org/2000/svg" height="18" viewBox="0 -960 960 960" width="18"><path d="M480-120q-75 0-140.5-28.5t-114-77q-48.5-48.5-77-114T120-480q0-75 28.5-140.5t77-114q48.5-48.5 114-77T480-840q150 0 255 105t105 255q0 150-105 255T480-120Zm0-80q117 0 198.5-81.5T760-480q0-117-81.5-198.5T480-760q-117 0-198.5 81.5T200-480q0 117 81.5 198.5T480-200Z"/></svg>
-            Multi-Model
-        </button>
-        
-        <button class="tool-nav-btn">
-            <svg xmlns="http://www.w3.org/2000/svg" height="18" viewBox="0 -960 960 960" width="18"><path d="M480-80q-82 0-155-31.5t-127.5-86Q143-252 111.5-325T80-480q0-83 31.5-156t86-127Q252-817 325-848.5T480-880q83 0 156 31.5T763-763q54 54 85.5 127T880-480q0 82-31.5 155T763-197.5q-54 54.5-127 86T480-80Zm0-100q42 0 81-12t75-35q-27-23-58-35.5T512-280H448q-35 0-66 12.5T324-227q36 23 75 35t81 12Z"/></svg>
-            Translator
-        </button>
+<nav>
+  <a href="index.html" class="nav-logo">EDGE<span>RUNNER</span></a>
+  <ul class="nav-links">
+
+  </ul>
+</nav>
+
+<section id="hero">
+  <div class="hero-badge">◈ Smart Edge Assistant</div>
+  <h1 class="hero-headline">
+    Unplug from<br>
+    <span class="hl-blue">the Cloud.</span><br>
+    Unleash <span class="hl-green">your AI Agent.</span>
+  </h1>
+  <p class="hero-sub">
+    The first plug-and-play Agentic AI Device combining intelligent decision-making with local cloud storage. Deliver instant, centralized AI assistance to your entire network without internet dependency, latency, or privacy risks.
+  </p>
+  <div class="hero-ctas">
+    <a href="#features" class="btn-primary"><span style="position:relative;z-index:1">⬡ Explore Plans</span></a>
+    <a href="#problem" class="btn-secondary">◎ See How It Works</a>
+  </div>
+  <div class="scroll-hint">
+    <div class="line"></div>
+    <span>Scroll</span>
+  </div>
+</section>
+
+<section id="problem">
+  <div class="problem-grid">
+    <div class="problem-left reveal">
+      <div class="section-label">// System Diagnostics</div>
+      <h2 class="section-title">The Problems<br>We're Solving</h2>
+      <p class="section-desc">
+        Every team, lab, and startup faces the same invisible bottlenecks. We identified the three critical failure points in today's AI infrastructure.
+      </p>
+    </div>
+    <div class="problem-cards">
+      <div class="problem-card c1 reveal reveal-delay-1">
+        <div class="problem-card-label">⚡ The Cloud Trap</div>
+        <p>Relying on cloud-based AI means constant internet dependence, frustrating latency, and exposing sensitive data to third-party servers you can't control.</p>
+      </div>
+      <div class="problem-card c2 reveal reveal-delay-2">
+        <div class="problem-card-label">⬡ The Shared Workspace Chaos</div>
+        <p>In labs, colleges, and startups, installing and managing heavy AI software across every individual computer is a massive waste of time and resources.</p>
+      </div>
+      <div class="problem-card c3 reveal reveal-delay-3">
+        <div class="problem-card-label">◎ The Missing Link</div>
+        <p>Teams lack a unified system that provides instant, shared, and intelligent assistance directly within their local environment — until now.</p>
+      </div>
+    </div>
+  </div>
+</section>
+
+<div class="divider"></div>
+
+<section id="features">
+  <div class="features-header reveal">
+    <div class="section-label">// Deployment Tiers</div>
+    <h2 class="section-title">Choose Your<br>Edge Configuration</h2>
+    <p class="section-desc">Three purpose-built tiers designed for where you work, scaled to how many you are.</p>
+  </div>
+
+  <div class="features-grid">
+    <div class="feature-card fc1 reveal reveal-delay-1" style="display: flex; flex-direction: column;">
+      <div class="feature-card-glow"></div>
+      <div class="feature-tag">Tier 01</div>
+      <div class="feature-icon">🖥</div>
+      <div class="feature-target">Engineering Students & Individual Devs</div>
+      <h3>Personal &amp;<br>Student Server</h3>
+      <ul class="feature-list" style="flex-grow: 1;">
+        <li>Plug-and-play Hardware Architecture</li>
+        <li>Local data storage system</li>
+        <li>Basic AI agent reasoning on-device</li>
+        <li>Zero internet dependency</li>
+      </ul>
+      <a href="personal.html" class="btn-feature">Explore →</a>
     </div>
 
-    <div class="main-content">
-        <div class="header">
-            <button class="menu-btn" id="menuBtn">
-                <svg xmlns="http://www.w3.org/2000/svg" height="24" viewBox="0 -960 960 960" width="24"><path d="M120-240v-80h720v80H120Zm0-200v-80h720v80H120Zm0-200v-80h720v80H120Z"/></svg>
-            </button>
-            <div class="user-avatar">U</div>
-        </div>
-
-        <div class="chat-container" id="chatContainer">
-            <div class="greeting" id="greetingArea">
-                <h1>Ready to assist.</h1>
-            </div>
-            </div>
-
-        <div class="input-container">
-            <div class="input-box">
-                <div class="action-menu-wrapper" id="actionMenuWrapper">
-                    <button class="plus-btn" id="plusBtn">
-                        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 -960 960 960"><path d="M440-440H200v-80h240v-240h80v240h240v80H520v240h-80v-240Z"/></svg>
-                    </button>
-                    
-                    <div class="action-dropdown" id="actionDropdown">
-                        <button class="dropdown-item">
-                            <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 -960 960 960"><path d="M440-320v-326L336-542l-56-58 200-200 200 200-56 58-104-104v326h-80ZM240-160q-33 0-56.5-23.5T160-240v-120h80v120h480v-120h80v120q0 33-23.5 56.5T720-160H240Z"/></svg>
-                            Upload files
-                        </button>
-                    </div>
-                </div>
-
-                <input type="text" id="userInput" placeholder="Type your message...">
-                <button class="icon-btn send-btn" id="sendBtn">
-                    <svg xmlns="http://www.w3.org/2000/svg" height="20" viewBox="0 -960 960 960" width="20"><path d="M120-160v-640l760 320-760 320Zm80-120 474-200-474-200v140l240 60-240 60v140Zm0 0v-400 400Z"/></svg>
-                </button>
-            </div>
-        </div>
+    <div class="feature-card fc2 reveal reveal-delay-2" style="display: flex; flex-direction: column;">
+      <div class="feature-card-glow"></div>
+      <div class="feature-tag">Tier 02</div>
+      <div class="feature-icon">🔗</div>
+      <div class="feature-target">Hardware / Software Startups & Small Offices</div>
+      <h3>Startup &amp;<br>Small Office</h3>
+      <ul class="feature-list" style="flex-grow: 1;">
+        <li>Multi-user connection over WiFi</li>
+        <li>Shared local data handling</li>
+        <li>Real-time request-response for teams</li>
+        <li>Scalable team subscription features</li>
+      </ul>
+      <a href="startup.html" class="btn-feature">Explore  →</a>
     </div>
 
-    <script>
-        // UI Elements
-        const chatContainer = document.getElementById('chatContainer');
-        const userInput = document.getElementById('userInput');
-        const sendBtn = document.getElementById('sendBtn');
-        const greetingArea = document.getElementById('greetingArea');
-        const menuBtn = document.getElementById('menuBtn');
-        const sidebar = document.getElementById('sidebar');
-        
-        // Plus Dropdown Elements
-        const plusBtn = document.getElementById('plusBtn');
-        const actionDropdown = document.getElementById('actionDropdown');
-        const actionMenuWrapper = document.getElementById('actionMenuWrapper');
+    <div class="feature-card fc3 reveal reveal-delay-3" style="display: flex; flex-direction: column;">
+      <div class="feature-card-glow"></div>
+      <div class="feature-tag">Tier 03</div>
+      <div class="feature-icon">🏛</div>
+      <div class="feature-target">Engineering Colleges & Enterprise Environments</div>
+      <h3>Industrial &amp;<br>Academic</h3>
+      <ul class="feature-list" style="flex-grow: 1;">
+        <li>Deployable, scalable decentralized AI infrastructure</li>
+        <li>Custom integration: intelligence + storage + accessibility</li>
+        <li>Large network support</li>
+        <li>Enterprise SLA &amp; dedicated support</li>
+      </ul>
+      <a href="industrial.html" class="btn-feature">Explore →</a>
+    </div>
+  </div>
+</section>
 
-        // Sidebar Toggle Logic
-        menuBtn.addEventListener('click', () => {
-            sidebar.classList.toggle('hidden');
-        });
+<div class="divider"></div>
 
-        // Plus Button Toggle Logic
-        plusBtn.addEventListener('click', (e) => {
-            e.stopPropagation(); // Prevents the document click listener from firing immediately
-            actionDropdown.classList.toggle('active');
-        });
+<section id="team">
+  <div class="team-header reveal">
+    <div class="section-label">// Core Contributors</div>
+    <h2 class="section-title">The EDGERUNNER Team</h2>
+    <p class="section-desc" style="margin: 0 auto;">The builders behind the device. Cross-disciplinary expertise, one unified mission.</p>
+  </div>
 
-        // Close dropdown when clicking outside
-        document.addEventListener('click', (e) => {
-            if (!actionMenuWrapper.contains(e.target)) {
-                actionDropdown.classList.remove('active');
-            }
-        });
+  <div class="team-grid">
+    <div class="team-card reveal">
+      <div class="team-avatar">DK</div>
+      <div class="team-name">Deekshitha</div>
+      <div class="team-role">Product Manager</div>
+    </div>
+    <div class="team-card reveal reveal-delay-1">
+      <div class="team-avatar">LS</div>
+      <div class="team-name">Likith S</div>
+      <div class="team-role">Backend Developer</div>
+    </div>
+    <div class="team-card reveal reveal-delay-2">
+      <div class="team-avatar">TA</div>
+      <div class="team-name">Tanish A</div>
+      <div class="team-role">AI / ML Engineer</div>
+    </div>
+    <div class="team-card reveal reveal-delay-3">
+      <div class="team-avatar">NM</div>
+      <div class="team-name">Nitin Makkittaya</div>
+      <div class="team-role">Frontend Developer</div>
+    </div>
+    <div class="team-card reveal reveal-delay-3">
+      <div class="team-avatar">AJ</div>
+      <div class="team-name">Advaith J</div>
+      <div class="team-role">Hardware / Integration</div>
+    </div>
+  </div>
+</section>
 
-        // Close dropdown if hitting Escape key
-        document.addEventListener('keydown', (e) => {
-            if (e.key === 'Escape') {
-                actionDropdown.classList.remove('active');
-            }
-        });
+<footer>
+  <div class="footer-logo">EDGERUNNER</div>
+  <div class="footer-copy">© 2025 EDGERUNNER — Agentic AI Device. All systems local.</div>
+</footer>
 
-        // AI Avatar SVG 
-        const aiSvg = `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><circle cx="8" cy="12" r="6" fill="currentColor" opacity="0.5"/><circle cx="16" cy="12" r="6" fill="currentColor" opacity="0.9"/></svg>`;
-
-        // Show/Hide send button based on input
-        userInput.addEventListener('input', () => {
-            if (userInput.value.trim().length > 0) {
-                sendBtn.style.display = 'flex';
-            } else {
-                sendBtn.style.display = 'none';
-            }
-        });
-
-        // Send message on Enter key
-        userInput.addEventListener('keypress', (e) => {
-            if (e.key === 'Enter') {
-                handleSend();
-            }
-        });
-
-        // Send message on Button click
-        sendBtn.addEventListener('click', handleSend);
-
-        function handleSend() {
-            const text = userInput.value.trim();
-            if (text === '') return;
-
-            // Remove greeting if it's the first message
-            if (greetingArea) {
-                greetingArea.style.display = 'none';
-            }
-
-            // Append User Message
-            appendMessage('user', text);
-            userInput.value = '';
-            sendBtn.style.display = 'none';
-
-            // Show typing indicator
-            const typingIndicatorId = showTypingIndicator();
-
-            // Simulate AI delay and response
-            setTimeout(() => {
-                removeTypingIndicator(typingIndicatorId);
-                const aiResponse = generateSimulatedResponse(text);
-                appendMessage('ai', aiResponse);
-            }, 1000 + Math.random() * 1000); 
-        }
-
-        function appendMessage(sender, text) {
-            const messageDiv = document.createElement('div');
-            messageDiv.classList.add('message');
-            messageDiv.classList.add(sender === 'user' ? 'user-message' : 'ai-message');
-
-            let innerHTML = '';
-
-            if (sender === 'ai') {
-                innerHTML = `
-                    <div class="ai-avatar">
-                        ${aiSvg}
-                    </div>
-                    <div class="message-content">${formatText(text)}</div>
-                `;
-            } else {
-                innerHTML = `
-                    <div class="message-content">${text}</div>
-                `;
-            }
-
-            messageDiv.innerHTML = innerHTML;
-            chatContainer.appendChild(messageDiv);
-            scrollToBottom();
-        }
-
-        function showTypingIndicator() {
-            const id = 'typing-' + Date.now();
-            const messageDiv = document.createElement('div');
-            messageDiv.classList.add('message', 'ai-message');
-            messageDiv.id = id;
-            
-            messageDiv.innerHTML = `
-                <div class="ai-avatar">${aiSvg}</div>
-                <div class="message-content">
-                    <div class="typing-indicator">
-                        <span></span><span></span><span></span>
-                    </div>
-                </div>
-            `;
-            
-            chatContainer.appendChild(messageDiv);
-            scrollToBottom();
-            return id;
-        }
-
-        function removeTypingIndicator(id) {
-            const element = document.getElementById(id);
-            if (element) {
-                element.remove();
-            }
-        }
-
-        function scrollToBottom() {
-            chatContainer.scrollTop = chatContainer.scrollHeight;
-        }
-
-        function formatText(text) {
-            return text
-                .replace(/\*\*(.*?)\*\*/g, '<strong>$1</strong>')
-                .replace(/\n/g, '<br>');
-        }
-
-        function generateSimulatedResponse(input) {
-            const lowerInput = input.toLowerCase();
-            if (lowerInput.includes('upload')) {
-                return "You can click the `+` button in the text input area to open the file upload menu.";
-            } else if (lowerInput.includes('tool') || lowerInput.includes('compressor') || lowerInput.includes('simulator')) {
-                return "The new Workspace Tools (Compressor, Simulator, Multi-Model, Translator) are available in the sidebar navigation.";
-            } else {
-                return "System logged. Processing input through the EDGE_RUNNER interface.";
-            }
-        }
-    </script>
+<script src="script.js"></script>
 </body>
 </html>
